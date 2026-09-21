@@ -9,7 +9,7 @@ function getCategories() {
   return Array.from(cats);
 }
 
-// 1. Home Page - List all posts (with search & category filter support)
+
 router.get("/", (req, res) => {
   let posts = store.getAllPosts();
   const { category, q } = req.query;
