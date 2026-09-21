@@ -1,0 +1,38 @@
+<header class="navbar-header">
+  <div class="container navbar-container">
+    <a href="/" class="brand-logo">
+      <div class="brand-icon">
+        <i class="fa-solid fa-feather-pointed"></i>
+      </div>
+      <span class="brand-name">Thought<span class="brand-highlight">Canvas</span></span>
+    </a>
+
+    <div class="search-form-container">
+      <form action="/" method="GET" class="search-form">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input 
+          type="text" 
+          name="q" 
+          placeholder="Search essays, topics, or authors..." 
+          value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>"
+          class="search-input"
+        >
+        <% if (typeof searchQuery !== 'undefined' && searchQuery) { %>
+          <a href="/" class="clear-search" title="Clear search"><i class="fa-solid fa-xmark"></i></a>
+        <% } %>
+      </form>
+    </div>
+
+    <nav class="nav-links">
+      <a href="/" class="nav-link <%= typeof activeNav !== 'undefined' && activeNav === 'home' ? 'active' : '' %>">
+        <i class="fa-solid fa-house"></i> Home
+      </a>
+      <a href="/about" class="nav-link <%= typeof activeNav !== 'undefined' && activeNav === 'about' ? 'active' : '' %>">
+        <i class="fa-solid fa-circle-info"></i> About
+      </a>
+      <a href="/posts/new" class="btn btn-primary btn-nav">
+        <i class="fa-solid fa-pen-nib"></i> Write Article
+      </a>
+    </nav>
+  </div>
+</header>

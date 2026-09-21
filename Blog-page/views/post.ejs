@@ -1,0 +1,133 @@
+<%- include('partials/head', { pageTitle: post.title }) %>
+<%- include('partials/navbar') %>
+
+<main class="main-content container narrow-container">
+
+  <% if (typeof notice !== 'undefined' && notice) { %>
+    <div class="toast-alert toast-success" id="toastNotice">
+      <i class="fa-solid fa-circle-check"></i>
+      <% if (notice === 'created') { %>
+        Article successfully published!
+      <% } else if (notice === 'updated') { %>
+        Article successfully updated!
+      <% } %>
+      <button onclick="this.parentElement.remove()" class="toast-close">&times;</button>
+    </div>
+  <% } %>
+
+  <!-- Navigation breadcrumbs -->
+  <div class="post-breadcrumbs">
+    <a href="/"><i class="fa-solid fa-arrow-left"></i> Back to Articles</a>
+    <span class="crumb-separator">/</span>
+    <span class="crumb-current"><%= post.category %></span>
+  </div>
+
+  <article class="single-post-article">
+    <!-- Header -->
+    <header class="single-post-header">
+      <div class="single-post-meta">
+        <span class="card-category-tag"><%= post.category %></span>
+        <span class="meta-item"><i class="fa-regular fa-calendar"></i> <%= post.createdAt %></span>
+        <span class="meta-divider">•</span>
+        <span class="meta-item"><i class="fa-regular fa-clock"></i> <%= post.readTime %></span>
+      </div>
+
+      <h1 class="single-post-title"><%= post.title %></h1>
+
+      <% if (post.subtitle) { %>
+        <p class="single-post-subtitle"><%= post.subtitle %></p>
+      <% } %>
+
+      <div class="author-row">
+        <div class="author-badge">
+          <div class="author-avatar lg"><%= post.author.charAt(0).toUpperCase() %></div>
+          <div class="author-details">
+            <span class="author-name lg"><%= post.author %></span>
+            <span class="author-role">Author & Contributor</span>
+          </div>
+        </div>
+
+        <div class="post-action-buttons">
+          <a href="/posts/<%= post.id %>/edit" class="btn btn-secondary">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+          </a>
+          <button 
+            type="button" 
+            class="btn btn-danger-outline"
+            onclick="openDeleteModal('<%= post.id %>', '<%= post.title.replace(/'/g, "\\'") %>')"
+          >
+            <i class="fa-solid fa-trash-can"></i> Delete
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Cover Image -->
+    <% if (post.coverImage) { %>
+      <div class="single-post-cover">
+        <img src="<%= post.coverImage %>" alt="<%= post.title %>" onError="this.style.display='none'">
+      </div>
+    <% } %>
+
+    <!-- Main Content Body -->
+    <div class="single-post-body">
+      <% 
+        // Simple helper to format content into paragraphs & h3 headers
+        const lines = post.content.split('\n');
+        lines.forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return;
+          if (trimmed.startsWith('### ')) { 
+      %>
+            <h3><%= trimmed.replace('### ', '') %></h3>
+      <%  } else if (trimmed.startsWith('1. ') || trimmed.startsWith('2. ') || trimmed.startsWith('3. ')) { %>
+            <p class="list-item"><strong><%= trimmed.substring(0, 3) %></strong><%= trimmed.substring(3) %></p>
+      <%  } else if (trimmed.startsWith('- ')) { %>
+            <p class="bullet-item">• <%= trimmed.substring(2) %></p>
+      <%  } else { %>
+            <p><%= trimmed %></p>
+      <%  }
+        });
+      %>
+    </div>
+
+    <!-- Article Footer Bar -->
+    <div class="single-post-footer">
+      <div class="post-tags">
+        <span class="tag-title">Tag:</span>
+        <a href="/?category=<%= encodeURIComponent(post.category) %>" class="cat-pill active"><%= post.category %></a>
+      </div>
+
+      <div class="share-actions">
+        <a href="/" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Return to Feed</a>
+        <a href="/posts/<%= post.id %>/edit" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Edit Post</a>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-warning-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3>Delete Article?</h3>
+      <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="deletePostTitle">this article</strong>?</p>
+      <p class="modal-subtext">This action will permanently remove the post from your active session store.</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <form id="deleteForm" method="POST" action="">
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Confirm Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

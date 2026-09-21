@@ -1,0 +1,121 @@
+<%- include('partials/head', { pageTitle: 'Edit Post: ' + post.title }) %>
+<%- include('partials/navbar') %>
+
+<main class="main-content container form-container">
+
+  <div class="form-header">
+    <a href="/posts/<%= post.id %>" class="back-link"><i class="fa-solid fa-arrow-left"></i> Cancel & return to post</a>
+    <div class="edit-badge"><i class="fa-solid fa-pen-to-square"></i> Editing Mode</div>
+    <h1 class="form-title">Edit Article</h1>
+    <p class="form-subtitle">Update title, text content, category, or media links for your article.</p>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="form-error-alert">
+      <i class="fa-solid fa-circle-exclamation"></i> <%= error %>
+    </div>
+  <% } %>
+
+  <form action="/posts/<%= post.id %>/edit" method="POST" class="post-form card-form">
+    
+    <div class="form-group">
+      <label for="title" class="form-label">Article Title <span class="required">*</span></label>
+      <input 
+        type="text" 
+        id="title" 
+        name="title" 
+        class="form-control form-control-lg" 
+        value="<%= post.title %>"
+        required 
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="subtitle" class="form-label">Subtitle / Deck</label>
+      <input 
+        type="text" 
+        id="subtitle" 
+        name="subtitle" 
+        class="form-control" 
+        value="<%= post.subtitle || '' %>"
+      >
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-group">
+        <label for="author" class="form-label">Author Name</label>
+        <div class="input-icon-wrapper">
+          <i class="fa-regular fa-user input-icon"></i>
+          <input 
+            type="text" 
+            id="author" 
+            name="author" 
+            class="form-control icon-indent" 
+            value="<%= post.author %>"
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="category" class="form-label">Category / Topic</label>
+        <div class="input-icon-wrapper">
+          <i class="fa-solid fa-tag input-icon"></i>
+          <input 
+            type="text" 
+            id="category" 
+            name="category" 
+            list="categoryOptions" 
+            class="form-control icon-indent" 
+            value="<%= post.category %>"
+          >
+          <datalist id="categoryOptions">
+            <option value="Essays">
+            <option value="Engineering">
+            <option value="Design">
+            <option value="Philosophy">
+            <option value="Technology">
+          </datalist>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="coverImage" class="form-label">Cover Image URL</label>
+      <div class="input-icon-wrapper">
+        <i class="fa-regular fa-image input-icon"></i>
+        <input 
+          type="url" 
+          id="coverImage" 
+          name="coverImage" 
+          class="form-control icon-indent" 
+          value="<%= post.coverImage || '' %>"
+        >
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="label-with-counter">
+        <label for="content" class="form-label">Article Body <span class="required">*</span></label>
+        <span class="word-counter" id="wordCounter">0 words</span>
+      </div>
+      <textarea 
+        id="content" 
+        name="content" 
+        rows="14" 
+        class="form-control text-content" 
+        required
+      ><%= post.content %></textarea>
+    </div>
+
+    <div class="form-actions">
+      <a href="/posts/<%= post.id %>" class="btn btn-secondary">Discard Changes</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+      </button>
+    </div>
+
+  </form>
+
+</main>
+
+<%- include('partials/footer') %>

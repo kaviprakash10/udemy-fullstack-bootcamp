@@ -1,0 +1,54 @@
+<%- include('partials/head', { pageTitle: 'About & Architecture' }) %>
+<%- include('partials/navbar', { activeNav: 'about' }) %>
+
+<main class="main-content container narrow-container">
+
+  <div class="about-hero">
+    <div class="brand-icon lg">
+      <i class="fa-solid fa-feather-pointed"></i>
+    </div>
+    <h1>About ThoughtCanvas</h1>
+    <p class="about-lead">
+      An open, elegant medium for thoughtful writers inspired by Paul Graham's essay archive.
+    </p>
+  </div>
+
+  <div class="about-card-grid">
+    <div class="about-card">
+      <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
+      <h3>Node.js & Express Router</h3>
+      <p>Built as a robust web server handling dynamic routes for creating, displaying, editing, and deleting posts seamlessly.</p>
+    </div>
+
+    <div class="about-card">
+      <div class="card-icon"><i class="fa-solid fa-code"></i></div>
+      <h3>EJS Templating</h3>
+      <p>Uses Embedded JavaScript to dynamically render server-side markup with zero client bundle overhead and instant load times.</p>
+    </div>
+
+    <div class="about-card">
+      <div class="card-icon"><i class="fa-solid fa-database"></i></div>
+      <h3>In-Memory Session Store</h3>
+      <p>Designed per the bootcamp capstone specifications using an optimized in-memory store pre-populated with curated sample articles.</p>
+    </div>
+
+    <div class="about-card">
+      <div class="card-icon"><i class="fa-solid fa-palette"></i></div>
+      <h3>Modern Dark UI System</h3>
+      <p>Crafted with bespoke Vanilla CSS, custom HSL color palettes, glassmorphism, responsive grid layouts, and micro-interactions.</p>
+    </div>
+  </div>
+
+  <div class="about-callout">
+    <h3>Inspired by Paul Graham Essays</h3>
+    <p>
+      Paul Graham's website (paulgraham.com) is legendary for prioritizing content clarity over noise. ThoughtCanvas combines that timeless simplicity with modern visual aesthetics.
+    </p>
+    <a href="http://www.paulgraham.com/articles.html" target="_blank" rel="noopener" class="btn btn-secondary">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Paul Graham's Articles
+    </a>
+  </div>
+
+</main>
+
+<%- include('partials/footer') %>

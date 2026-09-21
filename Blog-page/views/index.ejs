@@ -1,0 +1,164 @@
+<%- include('partials/head', { pageTitle: 'Home' }) %>
+<%- include('partials/navbar', { activeNav: 'home', searchQuery: searchQuery }) %>
+
+<main class="main-content container">
+
+  <% if (typeof req !== 'undefined' && req.query && req.query.notice) { %>
+    <!-- Handled by client JS or query param notice below -->
+  <% } %>
+
+  <!-- Alert Banner if Notice exists -->
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const notice = urlParams.get('notice');
+    if (notice === 'deleted') {
+      document.write(`
+        <div class="toast-alert toast-success" id="toastNotice">
+          <i class="fa-solid fa-circle-check"></i> Post successfully deleted.
+          <button onclick="this.parentElement.remove()" class="toast-close">&times;</button>
+        </div>
+      `);
+    }
+  </script>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fa-solid fa-sparkles"></i> Paul Graham & Modern Essay Platform
+      </div>
+      <h1 class="hero-title">Clear Thinking Begins with Writing.</h1>
+      <p class="hero-subtitle">
+        Explore deep essays on engineering, philosophy, design, and software systems. Publish your thoughts in seconds.
+      </p>
+      <div class="hero-actions">
+        <a href="/posts/new" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-plus"></i> Create New Post
+        </a>
+        <a href="/about" class="btn btn-secondary btn-lg">
+          <i class="fa-solid fa-compass"></i> Learn Architecture
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Search Info Header -->
+  <div class="filter-header">
+    <div class="categories-bar">
+      <a href="/" class="cat-pill <%= activeCategory === 'All' ? 'active' : '' %>">
+        All Posts
+      </a>
+      <% categories.forEach(cat => { %>
+        <a href="/?category=<%= encodeURIComponent(cat) %>" class="cat-pill <%= activeCategory.toLowerCase() === cat.toLowerCase() ? 'active' : '' %>">
+          <%= cat %>
+        </a>
+      <% }) %>
+    </div>
+
+    <% if (searchQuery || (activeCategory && activeCategory !== 'All')) { %>
+      <div class="active-filter-badge">
+        <span>
+          Showing results for 
+          <% if (activeCategory && activeCategory !== 'All') { %><strong>[<%= activeCategory %>]</strong><% } %>
+          <% if (searchQuery) { %> matching "<em><%= searchQuery %></em>"<% } %>
+        </span>
+        <a href="/" class="btn-text"><i class="fa-solid fa-rotate-left"></i> Reset Filter</a>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Posts Grid or Empty State -->
+  <% if (posts.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fa-regular fa-newspaper"></i>
+      </div>
+      <h3>No Articles Found</h3>
+      <p>There are no posts matching your current selection. Write a new article or reset filters.</p>
+      <a href="/posts/new" class="btn btn-primary"><i class="fa-solid fa-pen"></i> Write First Post</a>
+    </div>
+  <% } else { %>
+    
+    <!-- Posts Grid -->
+    <div class="posts-grid">
+      <% posts.forEach((post, index) => { %>
+        <article class="post-card <%= index === 0 && !searchQuery && activeCategory === 'All' ? 'featured-card' : '' %>">
+          <div class="card-image-wrapper">
+            <img src="<%= post.coverImage %>" alt="<%= post.title %>" class="card-image" loading="lazy" onError="this.src='https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop'">
+            <span class="card-category-tag"><%= post.category %></span>
+          </div>
+
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="meta-item"><i class="fa-regular fa-calendar"></i> <%= post.createdAt %></span>
+              <span class="meta-divider">•</span>
+              <span class="meta-item"><i class="fa-regular fa-clock"></i> <%= post.readTime %></span>
+            </div>
+
+            <h2 class="card-title">
+              <a href="/posts/<%= post.id %>"><%= post.title %></a>
+            </h2>
+
+            <% if (post.subtitle) { %>
+              <p class="card-subtitle"><%= post.subtitle %></p>
+            <% } %>
+
+            <p class="card-excerpt">
+              <%= post.content.replace(/[#*`]/g, '').substring(0, 140) %>...
+            </p>
+
+            <div class="card-footer">
+              <div class="author-info">
+                <div class="author-avatar"><%= post.author.charAt(0).toUpperCase() %></div>
+                <span class="author-name"><%= post.author %></span>
+              </div>
+
+              <div class="card-actions">
+                <a href="/posts/<%= post.id %>" class="btn-icon" title="View Full Post">
+                  <i class="fa-solid fa-arrow-right"></i>
+                </a>
+                <a href="/posts/<%= post.id %>/edit" class="btn-icon btn-edit" title="Edit Post">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+                <button 
+                  type="button" 
+                  class="btn-icon btn-delete" 
+                  title="Delete Post"
+                  onclick="openDeleteModal('<%= post.id %>', '<%= post.title.replace(/'/g, "\\'") %>')"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+  <% } %>
+
+</main>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-warning-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3>Delete Article?</h3>
+      <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to delete <strong id="deletePostTitle">this article</strong>?</p>
+      <p class="modal-subtext">This action will immediately remove the post from your session store.</p>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <form id="deleteForm" method="POST" action="">
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-trash-can"></i> Delete Post</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
