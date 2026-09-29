@@ -1,7 +1,7 @@
 /**
- * Joke Generator Web Application
- * Express.js backend using Axios to fetch jokes from JokeAPI (https://v2.jokeapi.dev/)
- * and serving a static frontend with Vanilla JavaScript.
+ * Express.js Web Application Server
+ * Integrates JokeAPI (https://v2.jokeapi.dev/) using Axios and EJS Templating.
+ * Features Tailwind CSS v4 styling, search filters, name personalization, and robust error handling.
  */
 
 const express = require('express');
@@ -11,21 +11,23 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to serve static frontend files (HTML, CSS, JS)
-app.use(express.static(path.join(__dirname, 'public')));
+// Configure EJS as the view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-// Middleware to parse JSON and URL-encoded request bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Middleware setup
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static assets (CSS, images, client JS)
+app.use(express.urlencoded({ extended: true }));       // Parse URL-encoded form data
+app.use(express.json());                                // Parse JSON request bodies
 
-// Base URL for JokeAPI
+// JokeAPI Base Endpoint
 const JOKE_API_BASE = 'https://v2.jokeapi.dev/joke';
 
 /**
  * Replaces placeholder names in joke content with user-specified name
- * @param {string} text - Joke setup or body text
- * @param {string} customName - Name provided by the user
- * @returns {string} Personalised text string
+ * @param {string} text - The raw joke text or setup/delivery string
+ * @param {string} customName - User provided custom name
+ * @returns {string} Personalised joke string
  */
 function personalizeJokeText(text, customName) {
   if (!text || !customName || !customName.trim()) return text;
@@ -39,71 +41,100 @@ function personalizeJokeText(text, customName) {
 }
 
 /**
- * GET /api/joke
- * Returns a default safe random joke
+ * GET /
+ * Render main view with an initial random safe joke
  */
-app.get('/api/joke', async (req, res) => {
+app.get('/', async (req, res) => {
   try {
+    // Axios request to JokeAPI for an initial safe joke
     const response = await axios.get(`${JOKE_API_BASE}/Any`, {
-      params: {
-        'safe-mode': true
-      },
-      timeout: 5000
+      params: { 'safe-mode': true },
+      timeout: 6000
     });
 
-    res.json({ success: true, joke: response.data });
+    res.render('index', {
+      data: response.data,
+      error: null,
+      query: {
+        category: 'Any',
+        type: 'any',
+        search: '',
+        customName: '',
+        blacklists: ['nsfw', 'racist', 'sexist', 'explicit']
+      }
+    });
   } catch (error) {
     console.error('Error fetching initial joke:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch initial joke. Please try again.'
+    res.render('index', {
+      data: null,
+      error: 'Unable to connect to JokeAPI. Click "Fetch Joke" to try again!',
+      query: {
+        category: 'Any',
+        type: 'any',
+        search: '',
+        customName: '',
+        blacklists: ['nsfw', 'racist', 'sexist', 'explicit']
+      }
     });
   }
 });
 
 /**
- * POST /api/joke
- * Fetches a customized joke based on category, filters, type, search term, and custom name
+ * POST /get-joke
+ * Handles user search inputs, filter selections, and returns API data to EJS template
  */
-app.post('/api/joke', async (req, res) => {
+app.post('/get-joke', async (req, res) => {
   const { category, type, search, customName, blacklists } = req.body;
 
   const selectedCategory = category || 'Any';
-  const params = {};
+  const apiParams = {};
 
+  // Joke format filter (single or twopart)
   if (type && type !== 'any') {
-    params.type = type;
+    apiParams.type = type;
   }
 
+  // Keyword search term filter
   if (search && search.trim() !== '') {
-    params.contains = search.trim();
+    apiParams.contains = search.trim();
   }
 
+  // Blacklist content flags filter
   if (blacklists) {
     const flagsArray = Array.isArray(blacklists) ? blacklists : [blacklists];
     if (flagsArray.length > 0) {
-      params.blacklistFlags = flagsArray.join(',');
+      apiParams.blacklistFlags = flagsArray.join(',');
     }
   }
 
+  // Store user query preferences to populate form inputs in EJS
+  const currentQuery = {
+    category: selectedCategory,
+    type: type || 'any',
+    search: search || '',
+    customName: customName || '',
+    blacklists: blacklists ? (Array.isArray(blacklists) ? blacklists : [blacklists]) : []
+  };
+
   try {
-    // Axios HTTP GET request to JokeAPI
+    // Axios HTTP request to JokeAPI
     const response = await axios.get(`${JOKE_API_BASE}/${selectedCategory}`, {
-      params,
-      timeout: 7000
+      params: apiParams,
+      timeout: 8000
     });
 
     const jokeData = response.data;
 
-    // JokeAPI returns error: true if no joke matches criteria
+    // Handle JokeAPI logical errors (e.g. no jokes match search filters)
     if (jokeData.error) {
-      return res.json({
-        success: false,
-        error: jokeData.message || 'No jokes found matching your criteria. Try adjusting your filters!'
+      return res.render('index', {
+        data: null,
+        error: jokeData.message || 'No jokes found matching your filter criteria. Try adjusting your search!',
+        query: currentQuery
       });
     }
 
-    // Personalize joke text if custom name was supplied
+    // Apply custom name substitution if provided by user
     if (customName && customName.trim() !== '') {
       if (jokeData.type === 'single') {
         jokeData.joke = personalizeJokeText(jokeData.joke, customName);
@@ -113,24 +144,35 @@ app.post('/api/joke', async (req, res) => {
       }
     }
 
-    res.json({ success: true, joke: jokeData });
+    // Render index.ejs with fetched API data
+    res.render('index', {
+      data: jokeData,
+      error: null,
+      query: currentQuery
+    });
   } catch (error) {
-    console.error('Error in /api/joke endpoint:', error.message);
+    console.error('API integration error in /get-joke:', error.message);
 
-    let errorMessage = 'An error occurred while communicating with the Joke API.';
+    // Contextual error handling for user feedback
+    let userErrorMessage = 'An error occurred while fetching data from the API.';
+
     if (error.response && error.response.data && error.response.data.message) {
-      errorMessage = error.response.data.message;
+      userErrorMessage = error.response.data.message;
     } else if (error.code === 'ECONNABORTED') {
-      errorMessage = 'The API request timed out. Please try again.';
+      userErrorMessage = 'Request to JokeAPI timed out. Please try again.';
     } else if (error.response && error.response.status === 404) {
-      errorMessage = 'No jokes found matching your criteria. Try adjusting your filters!';
+      userErrorMessage = 'No jokes match your exact search criteria.';
     }
 
-    res.status(500).json({ success: false, error: errorMessage });
+    res.render('index', {
+      data: null,
+      error: userErrorMessage,
+      query: currentQuery
+    });
   }
 });
 
-// Start Express server
+// Start listening on configured port
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`⚡ Server running in developer mode at http://localhost:${PORT}`);
 });
